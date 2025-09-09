@@ -17,12 +17,16 @@ import {
   Spinner,
   Center,
   FormControl,
-  FormLabel
+  FormLabel,
+  Grid,
+  GridItem,
+  Stack
 } from "@chakra-ui/react";
 import ProtectedRoute from "../../components/ProtectedRoute";
 import Layout from "../../components/Layout";
 import Cookie from "js-cookie";
 import axios from "axios";
+
 const MyProfilePage = () => {
   const [me, setMe] = useState(null);
   const [editMode, setEditMode] = useState(false);
@@ -54,31 +58,30 @@ const MyProfilePage = () => {
     }
   };
 
- const handleUpdate = async () => {
-  try {
-    const token = Cookie.get("token");
-    const fd = new FormData();
-    fd.append("name", formData.name);
-    fd.append("email", formData.email);
-    if (formData.avatarFile) {
-      fd.append("profilePicture", formData.avatarFile); // 👈 FIX
+  const handleUpdate = async () => {
+    try {
+      const token = Cookie.get("token");
+      const fd = new FormData();
+      fd.append("name", formData.name);
+      fd.append("email", formData.email);
+      if (formData.avatarFile) {
+        fd.append("profilePicture", formData.avatarFile);
+      }
+
+      const res = await axios.put(`${API_URL}api/users/me`, fd, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      setMe(res.data.user);
+      setEditMode(false);
+      toast({ title: "Profile updated!", status: "success" });
+    } catch (err) {
+      toast({ title: "Error updating profile", status: "error" });
     }
-
-    const res = await axios.put(`${API_URL}api/users/me`, fd, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "multipart/form-data",
-      },
-    });
-
-    setMe(res.data.user); // ✅ user will now include avatarUrl
-    setEditMode(false);
-    toast({ title: "Profile updated!", status: "success" });
-  } catch (err) {
-    toast({ title: "Error updating profile", status: "error" });
-  }
-};
-
+  };
 
   useEffect(() => {
     fetchMe();
@@ -99,83 +102,100 @@ const MyProfilePage = () => {
   return (
     <ProtectedRoute>
       <Layout>
-        <Box p={8} maxW="600px" mx="auto">
-          <Heading mb={6}>My Profile</Heading>
-          <Card shadow="md">
-            <CardHeader>
-              <Heading size="md">Profile Info</Heading>
+        <Box p={4} maxW="500px" mx="auto">
+          <Heading fontSize="2xl" color="blue.600" mb={6} textAlign="center">My Profile</Heading>
+          
+          <Card shadow="md" p={2}>
+            <CardHeader pb={2}>
+              <Heading fontSize="lg">Profile Info</Heading>
             </CardHeader>
+            
             <CardBody>
-              <HStack spacing={6}>
-                <Avatar name={me.name} src={me.avatarUrl} size="lg" />
-                <VStack align="start" spacing={4} flex="1" w="100%">
+              <Grid templateColumns={{ base: "1fr", md: "auto 1fr" }} gap={4} alignItems="start">
+                <GridItem>
+                  <Avatar name={me.name} src={me.avatarUrl} size="lg" />
+                </GridItem>
+                
+                <GridItem>
                   {editMode ? (
-                    <>
+                    <Stack spacing={3}>
                       <FormControl>
-                        <FormLabel>Name</FormLabel>
+                        <FormLabel fontSize="sm">Name</FormLabel>
                         <Input
+                          size="sm"
                           value={formData.name}
                           onChange={(e) =>
                             setFormData({ ...formData, name: e.target.value })
                           }
                         />
                       </FormControl>
+                      
                       <FormControl>
-                        <FormLabel>Email</FormLabel>
+                        <FormLabel fontSize="sm">Email</FormLabel>
                         <Input
+                          size="sm"
                           value={formData.email}
                           onChange={(e) =>
                             setFormData({ ...formData, email: e.target.value })
                           }
                         />
                       </FormControl>
+                      
                       <FormControl>
-  <FormLabel>Avatar</FormLabel>
-  <Input
-    type="file"
-    onChange={(e) => {
-      const file = e.target.files[0];
-      setFormData({ ...formData, avatarFile: file });
-      if (file) {
-        setMe((prev) => ({
-          ...prev,
-          avatarUrl: URL.createObjectURL(file), // 👈 preview instantly
-        }));
-      }
-    }}
-  />
-</FormControl>
+                        <FormLabel fontSize="sm">Avatar</FormLabel>
+                        <Input
+                          size="sm"
+                          type="file"
+                          p={0}
+                          onChange={(e) => {
+                            const file = e.target.files[0];
+                            setFormData({ ...formData, avatarFile: file });
+                            if (file) {
+                              setMe((prev) => ({
+                                ...prev,
+                                avatarUrl: URL.createObjectURL(file),
+                              }));
+                            }
+                          }}
+                        />
+                      </FormControl>
 
-                      <HStack pt={2}>
-                        <Button colorScheme="green" onClick={handleUpdate}>
+                      <HStack spacing={2} pt={2}>
+                        <Button colorScheme="blue" size="sm" onClick={handleUpdate}>
                           Save
                         </Button>
-                        <Button
-  onClick={() => {
-    setEditMode(false);
-    setFormData({
-      name: me.name,
-      email: me.email,
-      avatarFile: null,
-    });
-  }}
->
-  Cancel
-</Button>
-
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => {
+                            setEditMode(false);
+                            setFormData({
+                              name: me.name,
+                              email: me.email,
+                              avatarFile: null,
+                            });
+                          }}
+                        >
+                          Cancel
+                        </Button>
                       </HStack>
-                    </>
+                    </Stack>
                   ) : (
-                    <>
-                      <Text fontSize="lg" fontWeight="bold">{me.name}</Text>
-                      <Text>{me.email}</Text>
-                      <Button size="sm" colorScheme="blue" onClick={() => setEditMode(true)}>
+                    <Stack spacing={3}>
+                      <Text fontSize="md" fontWeight="bold">{me.name}</Text>
+                      <Text fontSize="sm" color="gray.600">{me.email}</Text>
+                      <Button 
+                        size="sm" 
+                        colorScheme="blue" 
+                        width="40%"
+                        onClick={() => setEditMode(true)}
+                      >
                         Edit Profile
                       </Button>
-                    </>
+                    </Stack>
                   )}
-                </VStack>
-              </HStack>
+                </GridItem>
+              </Grid>
             </CardBody>
           </Card>
         </Box>

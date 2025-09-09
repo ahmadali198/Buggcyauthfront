@@ -1,4 +1,3 @@
-// pages/profile/[id].js
 import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
 import {
@@ -18,6 +17,9 @@ import {
   Spinner,
   Center,
   useToast,
+  Grid,
+  GridItem,
+  Stack
 } from "@chakra-ui/react";
 import axios from "axios";
 import ProtectedRoute from "../../components/ProtectedRoute";
@@ -33,7 +35,11 @@ const ProfilePage = () => {
   const [me, setMe] = useState(null); // logged-in user
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
-  const [formData, setFormData] = useState({});
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    avatarFile: null
+  });
 
   const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -53,7 +59,11 @@ const ProfilePage = () => {
 
       // Only allow edit if viewing own profile
       if (meRes.data.user.id === userRes.data.user.id) {
-        setFormData({ ...userRes.data.user });
+        setFormData({
+          name: userRes.data.user.name,
+          email: userRes.data.user.email,
+          avatarFile: null
+        });
       }
     } catch (err) {
       console.error(err);
@@ -70,14 +80,24 @@ const ProfilePage = () => {
   const handleUpdate = async () => {
     try {
       const token = Cookie.get("token");
-      const res = await axios.put(`${API_URL}api/users/me`, formData, {
-        headers: { Authorization: `Bearer ${token}` },
+      const fd = new FormData();
+      fd.append("name", formData.name);
+      fd.append("email", formData.email);
+      if (formData.avatarFile) {
+        fd.append("profilePicture", formData.avatarFile);
+      }
+
+      const res = await axios.put(`${API_URL}api/users/me`, fd, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
       });
 
       setUser(res.data.user);
       setMe(res.data.user);
-      toast({ title: "Profile updated!", status: "success" });
       setEditMode(false);
+      toast({ title: "Profile updated!", status: "success" });
     } catch (err) {
       console.error(err);
       toast({ title: "Error updating profile", status: "error" });
@@ -101,56 +121,113 @@ const ProfilePage = () => {
   return (
     <ProtectedRoute>
       <Layout>
-        <Box p={8} maxW="600px" mx="auto">
-          <Card shadow="md" borderRadius="lg" overflow="hidden">
-            <CardHeader bg="blue.500" color="white" textAlign="center" py={6}>
-              <VStack spacing={3}>
-                <Avatar name={user.name} src={user.profilePicture} size="xl" />
-                <Heading size="lg">{user.name}</Heading>
-                <Text>{user.email}</Text>
-              </VStack>
+        <Box p={4} maxW="600px" mx="auto">
+          <Heading fontSize="2xl" color="blue.600" mb={6} textAlign="center">
+            {isOwnProfile ? "My Profile" : "User Profile"}
+          </Heading>
+          
+          <Card shadow="md" p={4}>
+            <CardHeader pb={2}>
+              <Heading fontSize="lg">Profile Info</Heading>
             </CardHeader>
-            <CardBody p={6}>
-              {isOwnProfile ? (
-                editMode ? (
-                  <VStack spacing={4}>
-                    {Object.keys(formData).map((field) => {
-                      // skip id and password fields
-                      if (["id", "password"].includes(field)) return null;
-                      return (
-                        <FormControl key={field}>
-                          <FormLabel>{field.charAt(0).toUpperCase() + field.slice(1)}</FormLabel>
-                          <Input
-                            value={formData[field] || ""}
-                            onChange={(e) =>
-                              setFormData({ ...formData, [field]: e.target.value })
-                            }
-                          />
-                        </FormControl>
-                      );
-                    })}
-                    <HStack spacing={4} pt={4}>
-                      <Button colorScheme="green" onClick={handleUpdate}>
-                        Save Changes
+            
+            <CardBody>
+              <Grid templateColumns={{ base: "1fr", md: "auto 1fr" }} gap={4} alignItems="start">
+                <GridItem>
+                  <Avatar 
+                    name={user.name} 
+                    src={formData.avatarFile ? URL.createObjectURL(formData.avatarFile) : user.profilePicture} 
+                    size="lg" 
+                  />
+                </GridItem>
+                
+                <GridItem>
+                  {isOwnProfile && editMode ? (
+                    <Stack spacing={3}>
+                      <FormControl>
+                        <FormLabel fontSize="sm">Name</FormLabel>
+                        <Input
+                          size="sm"
+                          value={formData.name}
+                          onChange={(e) =>
+                            setFormData({ ...formData, name: e.target.value })
+                          }
+                        />
+                      </FormControl>
+                      
+                      <FormControl>
+                        <FormLabel fontSize="sm">Email</FormLabel>
+                        <Input
+                          size="sm"
+                          value={formData.email}
+                          onChange={(e) =>
+                            setFormData({ ...formData, email: e.target.value })
+                          }
+                        />
+                      </FormControl>
+                      
+                      <FormControl>
+                        <FormLabel fontSize="sm">Profile Picture</FormLabel>
+                        <Input
+                          size="sm"
+                          type="file"
+                          p={1}
+                          onChange={(e) => {
+                            const file = e.target.files[0];
+                            setFormData({ ...formData, avatarFile: file });
+                          }}
+                        />
+                      </FormControl>
+
+                      <HStack spacing={2} pt={2}>
+                        <Button colorScheme="blue" size="sm" onClick={handleUpdate}>
+                          Save
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => {
+                            setEditMode(false);
+                            setFormData({
+                              name: user.name,
+                              email: user.email,
+                              avatarFile: null,
+                            });
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                      </HStack>
+                    </Stack>
+                  ) : (
+                    <Stack spacing={2}>
+                      <Text fontSize="md" fontWeight="bold">{user.name}</Text>
+                      <Text fontSize="sm" color="gray.600">{user.email}</Text>
+                      <HStack spacing={2}>
+                      {isOwnProfile && (
+                        <Button 
+                          size="sm" 
+                          colorScheme="blue" 
+                          width="30%"
+                          onClick={() => setEditMode(true)}
+                        >
+                          Edit Profile
+                        </Button>
+                      )}
+                      <Button 
+                        size="sm" 
+                        colorScheme="blue"
+                        width="30%"
+                        variant="outline"
+                        onClick={() => router.push("/users")}
+                      >
+                        Back to Users
                       </Button>
-                      <Button onClick={() => setEditMode(false)}>Cancel</Button>
-                    </HStack>
-                  </VStack>
-                ) : (
-                  <HStack spacing={4}>
-                    <Button colorScheme="yellow" onClick={() => setEditMode(true)}>
-                      Edit Profile
-                    </Button>
-                    <Button colorScheme="blue" onClick={() => router.push("/users")}>
-                      Back to Users
-                    </Button>
-                  </HStack>
-                )
-              ) : (
-                <Button colorScheme="blue" onClick={() => router.push("/users")}>
-                  Back to Users
-                </Button>
-              )}
+                      </HStack>
+                    </Stack>
+                  )}
+                </GridItem>
+              </Grid>
             </CardBody>
           </Card>
         </Box>

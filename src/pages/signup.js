@@ -2,7 +2,7 @@ import { useState } from "react";
 import {
   Box, Button, Flex, FormControl, FormLabel,
   Input, Stack, Heading, Text, useToast, Select,
-  Avatar, Center
+  Avatar, Center, Grid, GridItem
 } from "@chakra-ui/react";
 import { useRouter } from "next/router";
 import axios from "axios";
@@ -101,70 +101,142 @@ export default function Signup() {
 
   return (
     <Flex minH="100vh" align="center" justify="center" bg="gray.50" px={4}>
-      <Box bg="white" p={8} rounded="xl" shadow="lg" w={{ base: "100%", sm: "480px" }}>
-        <Stack spacing={6}>
+      <Box 
+        bg="white" 
+        p={6} 
+        rounded="xl" 
+        shadow="lg" 
+        w={{ base: "100%", sm: "480px" }}
+        maxH="95vh"
+        overflow="hidden"
+      >
+        <Stack spacing={4}>
           <Stack align="center">
-            <Heading fontSize="3xl" color="blue.600">Create an Account</Heading>
-            <Text fontSize="md" color="gray.600">Sign up to continue</Text>
+            <Heading fontSize="2xl" color="blue.600">Create an Account</Heading>
+            <Text fontSize="sm" color="gray.600">Sign up to continue</Text>
           </Stack>
 
           <form onSubmit={handleSubmit} noValidate>
-            <Stack spacing={4}>
-              <FormControl isRequired isInvalid={errors.name}>
-                <FormLabel>Name</FormLabel>
-                <Input name="name" value={formData.name} onChange={handleChange} placeholder="John Doe" />
-                {errors.name && <Text color="red.500" fontSize="sm">{errors.name}</Text>}
-              </FormControl>
+            <Grid templateColumns="1fr 1fr" gap={3}>
+              <GridItem colSpan={2}>
+                <FormControl isRequired isInvalid={errors.name}>
+                  <FormLabel fontSize="sm">Name</FormLabel>
+                  <Input 
+                    size="sm" 
+                    name="name" 
+                    value={formData.name} 
+                    onChange={handleChange} 
+                    placeholder="John Doe" 
+                  />
+                  {errors.name && <Text color="red.500" fontSize="xs">{errors.name}</Text>}
+                </FormControl>
+              </GridItem>
 
-              <FormControl isRequired isInvalid={errors.email}>
-                <FormLabel>Email</FormLabel>
-                <Input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="john@example.com" />
-                {errors.email && <Text color="red.500" fontSize="sm">{errors.email}</Text>}
-              </FormControl>
+              <GridItem colSpan={2}>
+                <FormControl isRequired isInvalid={errors.email}>
+                  <FormLabel fontSize="sm">Email</FormLabel>
+                  <Input 
+                    size="sm"
+                    type="email" 
+                    name="email" 
+                    value={formData.email} 
+                    onChange={handleChange} 
+                    placeholder="john@example.com" 
+                  />
+                  {errors.email && <Text color="red.500" fontSize="xs">{errors.email}</Text>}
+                </FormControl>
+              </GridItem>
 
-              <FormControl isRequired isInvalid={errors.password}>
-                <FormLabel>Password</FormLabel>
-                <Input type="password" name="password" value={formData.password} onChange={handleChange} placeholder="********" />
-                {errors.password && <Text color="red.500" fontSize="sm">{errors.password}</Text>}
-              </FormControl>
+              <GridItem colSpan={2}>
+                <FormControl isRequired isInvalid={errors.password}>
+                  <FormLabel fontSize="sm">Password</FormLabel>
+                  <Input 
+                    size="sm"
+                    type="password" 
+                    name="password" 
+                    value={formData.password} 
+                    onChange={handleChange} 
+                    placeholder="********" 
+                  />
+                  {errors.password && <Text color="red.500" fontSize="xs">{errors.password}</Text>}
+                </FormControl>
+              </GridItem>
 
-              <FormControl isRequired isInvalid={errors.age}>
-                <FormLabel>Age</FormLabel>
-                <Input type="number" name="age" value={formData.age} onChange={handleChange} placeholder="e.g. 25" />
-                {errors.age && <Text color="red.500" fontSize="sm">{errors.age}</Text>}
-              </FormControl>
+              <GridItem colSpan={1}>
+                <FormControl isRequired isInvalid={errors.age}>
+                  <FormLabel fontSize="sm">Age</FormLabel>
+                  <Input 
+                    size="sm"
+                    type="number" 
+                    name="age" 
+                    value={formData.age} 
+                    onChange={handleChange} 
+                    placeholder="25" 
+                  />
+                  {errors.age && <Text color="red.500" fontSize="xs">{errors.age}</Text>}
+                </FormControl>
+              </GridItem>
 
-              <FormControl>
-                <FormLabel>Gender (optional)</FormLabel>
-                <Select name="gender" value={formData.gender} onChange={handleChange} placeholder="Select gender">
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
-                  <option value="other">Other</option>
-                  <option value="prefer-not-to-say">Prefer not to say</option>
-                </Select>
-              </FormControl>
+              <GridItem colSpan={1}>
+                <FormControl>
+                  <FormLabel fontSize="sm">Gender</FormLabel>
+                  <Select 
+                    size="sm"
+                    name="gender" 
+                    value={formData.gender} 
+                    onChange={handleChange} 
+                    placeholder="Select"
+                  >
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="other">Other</option>
+                    <option value="prefer-not-to-say">Prefer not to say</option>
+                  </Select>
+                </FormControl>
+              </GridItem>
 
-              <FormControl isInvalid={errors.profilePicture}>
-                <FormLabel>Profile Picture (optional)</FormLabel>
-                <Input type="file" accept="image/*" name="profilePicture" onChange={handleChange} />
-                {errors.profilePicture && <Text color="red.500" fontSize="sm">{errors.profilePicture}</Text>}
-                {formData.profilePicture && (
-                  <Center mt={3}>
-                    <Avatar size="xl" src={URL.createObjectURL(formData.profilePicture)} />
-                  </Center>
-                )}
-              </FormControl>
+              <GridItem colSpan={2}>
+                <FormControl isInvalid={errors.profilePicture}>
+                  <FormLabel fontSize="sm">Profile Picture (optional)</FormLabel>
+                  <Input 
+                    size="sm"
+                    type="file" 
+                    accept="image/*" 
+                    name="profilePicture" 
+                    onChange={handleChange} 
+                    py={1}
+                    px={1}
+                    fontSize="xs"
+                    height="auto"
+                  />
+                  {errors.profilePicture && <Text color="red.500" fontSize="xs">{errors.profilePicture}</Text>}
+                </FormControl>
+              </GridItem>
 
-              <Button colorScheme="blue" type="submit" isLoading={loading} loadingText="Signing up" width="full">
-                Sign Up
-              </Button>
-            </Stack>
-          </form>
+              <GridItem colSpan={2} display="flex" justifyContent="center">
+  <Button 
+    colorScheme="blue" 
+    type="submit" 
+    isLoading={loading} 
+    loadingText="Signing up" 
+    width="50%"
+    size="sm"
+    mt={2}
+  >
+    Sign Up
+  </Button>
+</GridItem>
+</Grid>
+<Text textAlign="center" fontSize="xs" pt={1}>
+  Already have an account?{" "}
+  <Button variant="link" colorScheme="blue" size="sm" onClick={() => router.push("/login")} pt={0}>
+    Log in
+  </Button>
+</Text>
 
-          <Text textAlign="center" fontSize="sm">
-            Already have an account?{" "}
-            <Button variant="link" colorScheme="blue" onClick={() => router.push("/login")}>Log in</Button>
-          </Text>
+</form>
+
+
         </Stack>
       </Box>
     </Flex>

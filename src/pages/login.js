@@ -6,18 +6,15 @@ import {
   Text, 
   Spinner,
   VStack,
-  Container,
   FormControl,
   FormLabel,
   Input,
   Button,
   HStack,
   Divider,
-  Link,
   InputGroup,
   InputRightElement,
-  IconButton,
-  useColorModeValue
+  IconButton
 } from "@chakra-ui/react";
 import { useRouter } from "next/router";
 import axios from "axios";
@@ -37,21 +34,11 @@ const LoginPage = () => {
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
   const [errors, setErrors] = useState({});
 
-  const bgGradient = useColorModeValue(
-    "linear(to-br, blue.50, purple.50, pink.50)",
-    "linear(to-br, blue.900, purple.900, pink.900)"
-  );
-
   // Redirect if already logged in
   useEffect(() => {
     const token = Cookie.get("token");
     if (token) router.push("/dashboard");
   }, [router]);
-
-  useEffect(() => {
-    console.log('Google Client ID:', process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID);
-    console.log('API Base URL:', process.env.NEXT_PUBLIC_API_BASE_URL);
-  }, []);
 
   // Validate form
   const validateForm = () => {
@@ -129,115 +116,96 @@ const LoginPage = () => {
   };
 
   return (
-    <Flex minHeight="100vh" align="center" justify="center" bgGradient={bgGradient} p={4}>
-      <Container maxW="lg" centerContent>
-        <VStack spacing={8} align="center" w="100%">
-          <VStack spacing={3} textAlign="center">
-            <Heading size="2xl" bgGradient="linear(to-r, blue.600, purple.600)" bgClip="text" fontWeight="800">
-              Welcome Back
-            </Heading>
-            <Text color="gray.600" fontSize="lg" maxW="400px">
-              Sign in to your account to continue
-            </Text>
+    <Flex minH="50vh" align="center" justify="center" px={4} paddingTop={10}>
+      <Box 
+        p={6} 
+        rounded="md" 
+        shadow="md" 
+        w="full" 
+        maxW="400px"
+        borderWidth="1px"
+      >
+        <VStack spacing={4}>
+          <Heading fontSize="xl" textAlign="center">Welcome Back</Heading>
+          <Text fontSize="sm" color="gray.600" textAlign="center">Sign in to your account</Text>
+
+          <Button
+            onClick={() => googleLogin()} 
+            disabled={googleLoading || isLoading}
+            variant="outline"
+            width="70%"
+            display="flex"
+            alignItems="center"
+            gap="8px"
+            size="sm"
+          >
+            {googleLoading ? <Spinner size="sm" /> : <><FcGoogle size={16} />Continue with Google</>}
+          </Button>
+
+          <HStack w="full"><Divider /><Text fontSize="xs" color="gray.500">OR</Text><Divider /></HStack>
+
+          <VStack as="form" onSubmit={handleEmailLogin} w="full" spacing={3}>
+            <FormControl isRequired isInvalid={errors.email}>
+              <FormLabel fontSize="sm" mb={1}>Email</FormLabel>
+              <Input
+                size="sm"
+                type="email"
+                placeholder="Enter your email"
+                value={loginForm.email}
+                onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
+              />
+              {errors.email && <Text color="red.500" fontSize="xs" mt={1}>{errors.email}</Text>}
+            </FormControl>
+
+            <FormControl isRequired isInvalid={errors.password}>
+              <FormLabel fontSize="sm" mb={1}>Password</FormLabel>
+              <InputGroup size="sm">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter your password"
+                  value={loginForm.password}
+                  onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
+                />
+                <InputRightElement width="2.5rem">
+                  <IconButton
+                    h="1.5rem"
+                    size="xs"
+                    variant="ghost"
+                    onClick={() => setShowPassword(!showPassword)}
+                    icon={showPassword ? <ViewOffIcon /> : <ViewIcon />}
+                    aria-label="Toggle password visibility"
+                  />
+                </InputRightElement>
+              </InputGroup>
+              {errors.password && <Text color="red.500" fontSize="xs" mt={1}>{errors.password}</Text>}
+            </FormControl>
+
+            <Button
+              type="submit"
+              colorScheme="blue"
+              isLoading={isLoading}
+              loadingText="Signing in"
+              width="50%"
+              size="sm"
+              mt={2}
+            >
+              Sign In
+            </Button>
           </VStack>
 
-          <Box background="white" borderRadius="16px" padding="2.5rem" boxShadow="0 20px 60px rgba(0, 0, 0, 0.1)" border="1px solid" borderColor="gray.200" maxWidth="450px" width="100%">
-            <VStack spacing={6} as="form" onSubmit={handleEmailLogin} w="100%">
-              <Button
-                onClick={() => googleLogin()} 
-                disabled={googleLoading || isLoading}
-                type="button"
-                variant="outline"
-                width="100%"
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-                gap="12px"
-                padding="12px 24px"
-                borderRadius="8px"
-                border="2px solid"
-                borderColor="gray.200"
-                cursor="pointer"
-                backgroundColor="white"
-                color="gray.700"
-                fontSize="16px"
-                fontWeight="500"
-                _hover={{ bg: "gray.50", borderColor: "gray.300" }}
-                _disabled={{ opacity: 0.6, cursor: "not-allowed" }}
-              >
-                {googleLoading ? <Spinner size="sm" /> : <><FcGoogle size={20} /><span>Continue with Google</span></>}
-              </Button>
-
-              <HStack w="100%"><Divider /><Text fontSize="sm" color="gray.500" px={3}>OR</Text><Divider /></HStack>
-
-              <VStack spacing={4} w="100%">
-                <FormControl isRequired isInvalid={errors.email}>
-                  <FormLabel fontSize="sm" fontWeight="medium">Email</FormLabel>
-                  <Input
-                    type="email"
-                    placeholder="Enter your email"
-                    value={loginForm.email}
-                    onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
-                    bg="gray.50"
-                    border="none"
-                    _focus={{ bg: "white", boxShadow: "0 0 0 1px #3182ce" }}
-                  />
-                  {errors.email && <Text color="red.500" fontSize="sm">{errors.email}</Text>}
-                </FormControl>
-
-                <FormControl isRequired isInvalid={errors.password}>
-                  <FormLabel fontSize="sm" fontWeight="medium">Password</FormLabel>
-                  <InputGroup>
-                    <Input
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Enter your password"
-                      value={loginForm.password}
-                      onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
-                      bg="gray.50"
-                      border="none"
-                      _focus={{ bg: "white", boxShadow: "0 0 0 1px #3182ce" }}
-                    />
-                    <InputRightElement>
-                      <IconButton
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setShowPassword(!showPassword)}
-                        icon={showPassword ? <ViewOffIcon /> : <ViewIcon />}
-                        aria-label="Toggle password visibility"
-                      />
-                    </InputRightElement>
-                  </InputGroup>
-                  {errors.password && <Text color="red.500" fontSize="sm">{errors.password}</Text>}
-                </FormControl>
-
-                <Button
-                  type="submit"
-                  colorScheme="blue"
-                  size="lg"
-                  w="100%"
-                  isLoading={isLoading}
-                  loadingText="Signing in..."
-                  bgGradient="linear(to-r, blue.500, blue.600)"
-                  _hover={{ bgGradient: "linear(to-r, blue.600, blue.700)" }}
-                >
-                  Sign In
-                </Button>
-              </VStack>
-
-              <HStack justifyContent="space-between" w="100%">
-                <Text fontSize="sm" color="gray.500">
-                  Forgot your password?{" "}
-                  <Link color="blue.500" fontWeight="medium">Reset it here</Link>
-                </Text>
-                <Text fontSize="sm" color="gray.500">
-                  Don't have an account?{" "}
-                  <Link color="blue.500" fontWeight="medium" onClick={() => router.push("/signup")} cursor="pointer">Sign up</Link>
-                </Text>
-              </HStack>
-            </VStack>
-          </Box>
+          <Text textAlign="center" fontSize="sm">
+            Don't have an account?{" "}
+            <Button 
+              variant="link" 
+              colorScheme="blue" 
+              size="sm" 
+              onClick={() => router.push("/signup")}
+            >
+              Sign up
+            </Button>
+          </Text>
         </VStack>
-      </Container>
+      </Box>
     </Flex>
   );
 };
